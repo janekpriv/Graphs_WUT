@@ -11,12 +11,18 @@ int main(int argc, char **argv){
 
     srand(time(NULL));
 
-    int number_of_nodes = rand() + (max - min +1)+ min;
+    int number_of_nodes = rand() % (max - min +1)+ min;
 
-    graph *g  = create_graph(2);
+    int number_of_edges = rand() % (number_of_nodes*number_of_nodes - number_of_nodes) + number_of_nodes;
 
-    add_edge(g, 0, 1);
-    add_edge(g, 1, 0);
+    graph *g  = create_graph(number_of_nodes);
+    
+    //nested forloop for more than one connections, -> number of edges from each node
+    for(int i = 0; i<number_of_nodes; i++){
+        int random_node = rand() % (number_of_nodes +1);
+        add_edge(g, i, random_node);
+    }
+
 
     print_graph(g);
     
