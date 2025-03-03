@@ -2,43 +2,26 @@
 #include <stdio.h>
 #include "graph.h"
 #define DEBUG
-
-int contains(int id, Node *list){
-    if (list == NULL) return 0;
-    while (list) {
-        if (list->id == id) {
-
-            return 1; 
-            
+int contains(int id, Node *list, int size) {
+    for (int i = 0; i < size; i++) {
+        if (list[i]->id == id) {
+            return 1;
         }
-        list = list->next;
     }
     return 0;
 }
 
-Node *create_node(int id){
-    Node *v = malloc(sizeof(Node));
+Node create_node(int id){
+    Node v = malloc(sizeof(struct node));
     if (!v) return NULL;
     v->id = id;
     v->ne = 0;
-    v->next = NULL;
+    v->links = NULL;
     return v;
 }
 
-void push_node(Node **head, Node *neighbor) {
-    if (*head == NULL) {
-        *head = neighbor;
-        return;
-    }
-    Node *temp = *head;
-    while (temp->next) {
-        temp = temp->next;
-    }
-    temp->next = neighbor;
-}
-
 Graph * graph_init(int n, GraphType type) {
-    Graph *g = (Graph *)malloc(sizeof(Graph));
+    Graph *g = malloc(sizeof(Graph));
     if (g == NULL) return NULL;
 
     g->type = type;
@@ -51,6 +34,7 @@ Graph * graph_init(int n, GraphType type) {
     }
     for (int i = 0; i < n; i++) {
         g->nodes[i] = create_node(i);
+        g->nodes[i]->links = malloc((n-1) * sizeof(struct node *));
         if (!g->nodes[i]) {
             free_graph(g);
             return NULL;
@@ -59,53 +43,52 @@ Graph * graph_init(int n, GraphType type) {
     return g;
 }
 
+void link_nodes(Node node1, Node node2) {
+    /* node1 -> node2*/
+    node1->links[node1->ne] = node2;
+    node1->ne++;
+}
+
+
 Graph *generate_rgraph(Graph *g){ 
     int i, j;
     int v = g->n;
 
-    int rne; // random number of edges
+    int rne; // random number of links
     int re;  // random edge
     
     for (i = 0; i < v; i++){
-        //rne = (rand() % (v-1)) + 1;
-        rne = rand() % (v/2 + 1) + 1;
-        g->nodes[i]->ne = rne;
-
-        #ifdef DEBUG
-        printf("Node %d, rne = %d\n", i, rne);
-        #endif
+        rne = ((rand() % (v/2)) + 1);
         
-        for(j = 0; j < rne; j++){
+        if (g->nodes[i]->links == NULL) {
+            free_graph(g);
+            return NULL;
+        }
+        #ifdef DEBUG
+                printf("\nrne = %d: ", rne);
+        #endif
+
+        int *ne = &g->nodes[i]->ne; // number of edges in the links array
+        while(*ne < rne && *ne < v){
             re = i;
             int attempts = 0;
-
-            while (attempts < v) {  // Ensure we don't retry forever
+            while(re == i || contains(re, g->nodes[i]->links, g->nodes[i]->ne)){
                 re = rand() % v;
-                if (re != i && !contains(re, g->nodes[i]->next)) break;  // Found valid re
-                attempts++;
+            
+                if (attempts++ >= v) break;
             }
-        
+
             if (attempts >= v) {
-                // Failed to find a valid edge
-                #ifdef DEBUG
-                printf("  Skipped edge for %d (no valid re found after %d attempts)\n", i, attempts);
-                #endif
-                continue;
+                break;
             }
-        
-            // Successfully found a valid re
-            push_node(&g->nodes[i]->next, g->nodes[re]);
-            g->nodes[i]->ne++;
+            link_nodes(g->nodes[i], g->nodes[re]);
+            
+            if (g->type == UNDIRECTED && !contains(i, g->nodes[re]->links, g->nodes[re]->ne)){ 
+                link_nodes(g->nodes[re], g->nodes[i]);
+            }
             #ifdef DEBUG
-            printf("  Added edge %d -> %d\n", i, re);
+                printf("%d ", re);
             #endif
-        
-            if (g->type == UNDIRECTED && !contains(i, g->nodes[re]->next)) {
-                push_node(&g->nodes[re]->next, g->nodes[i]);
-                #ifdef DEBUG
-                printf("Added edge between %d and %d\n", i, re);
-                #endif
-            }
             
         }
     }
@@ -119,29 +102,29 @@ void print_list_repr(Graph *g){
     }
     printf("Adjacency List Representation:\n");
     for (int i = 0; i < g->n; i++) {
-        printf("%d: ",  g->nodes[i]->id);
-
-        Node * h = g->nodes[i]->next;
-        while(h){
-            printf("%d ", h->id);
-            h = h->next;
-        }    
+        printf("%d: ", g->nodes[i]->id);
+        
+        for (int j = 0; j < g->nodes[i]->ne; j++) {
+            printf("%d ", g->nodes[i]->links[j]->id);
+        }
         printf("\n");
     }
 }
 
 
-
 void free_graph(Graph *g) {
     if (!g) return;
+
     for (int i = 0; i < g->n; i++) {
-        Node *current = g->nodes[i];
-        while (current) {
-            Node *next = current->next;
-            free(current);
-            current = next;
+        if (g->nodes[i] != NULL) {
+            if (g->nodes[i]->links != NULL) {
+                free(g->nodes[i]->links);
+            }
+            free(g->nodes[i]);
         }
     }
-    free(g->nodes);
+    if (g->nodes != NULL) {
+        free(g->nodes);
+    }
     free(g);
 }
