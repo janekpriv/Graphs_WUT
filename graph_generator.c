@@ -59,6 +59,18 @@ void print_graph(graph *g){
     printf("\n");
 }
 
+int check_if_edge_exists(graph *g, int a, int b) {
+    node *current = g->adjacency[a];
+    while (current) {
+        if (current->id == b) {
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0; 
+}
+
+
 void generate_random_graph(){
 
     int min = 0;
