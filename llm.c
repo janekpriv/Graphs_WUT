@@ -5,8 +5,6 @@
 #include <string.h>
 #include "llm.h"
 #include "graph.h"
-#undef DEBUG
-
 
 Graph *parse_chat_reply(char rep[]){
     char reply_type;
@@ -14,72 +12,96 @@ Graph *parse_chat_reply(char rep[]){
     rep++; // skip quotation mark
     rep[strlen(rep)-1] = '\0'; // remove closing quotation mark
 
-    #ifdef DEBUG
-        char *ex = "d10 m 1 2 2 3 4 10    ";
-        rep = ex;
-    #endif
-
     int nodes = 0;
-    char gtype;
+    char gtype, gcreation;
+    Graph *g;
+    if (((sscanf(rep, "%c", &reply_type)) == 1) && (reply_type == 'd' || reply_type == 'u')){
+        rep++; 
 
-    sscanf(rep, "%c", &reply_type); 
-    rep++; 
-
-    if (reply_type == 'd'){
-        sscanf(rep, "%d %c", &nodes, &gtype);
-        Graph *g = graph_init(nodes, UNDIRECTED);
-        if (g == NULL){
-            perror("Graph initalization failed");
-            return NULL;
-        }
-        if (gtype == 'm'){
-            while (*(rep++) != 'm' && *rep != 'r') ; // move text 
-            char * cursor = rep;
-            int c = 0; int i;
-            while (*cursor != '\0'){
-                long int n1 = strtol(cursor, &cursor, 10);
-                long int n2 = strtol(cursor, &cursor, 10);
-                while (*cursor == ' ') // prevent infinite loop
-                cursor++;
-                // segm fault somewhere there
-                Node nd1, nd2;
-                if (c < (g->n -1)){
-                    if ((i = contains(n1, g->nodes, c)) == -1){
-                        nd1 = create_node(n1);
-                        g->nodes[c++] = nd1;
-                    }else{ 
-                        nd1 = g->nodes[i];
-                    }
-                    if ((i = contains(n2, g->nodes, c)) == -1){
-                        nd2 = create_node(n2);
-                        g->nodes[c++]  = nd2;
-                    }else{
-                        nd2 = g->nodes[i];
-                    }
-                    if (nd1 && nd2)
-                        link_nodes(nd1, nd2);
+        if (reply_type == 'd'){
+            if (((sscanf(rep, "%d %c %c", &nodes, &gcreation, &gtype)) == 3) && (gcreation == 'm' || gcreation == 'r')&& (gtype == 'd' || gtype == 'u')){
+                
+                if (gtype == 'u'){
+                    g = graph_init(nodes, UNDIRECTED);
+                }else if (gtype == 'd'){
+                    g = graph_init(nodes, DIRECTED);
+                }
+                if (g == NULL){
+                    perror("Graph initalization failed");
+                    return NULL;
                 }
                 
+                if (gcreation == 'm'){
+                    while ((*(rep) != 'd') && (*rep != 'u')) {
+                        rep++; // move text 
+                    }
+                    rep++;
+                    
+                    char * cursor = rep;
+                    
+                    int c = 0; int i;
+                    while (*cursor != '\0'){
+                        long int n1 = strtol(cursor, &cursor, 10);
+                        long int n2 = strtol(cursor, &cursor, 10);
+                        while (*cursor == ' ') // prevent infinite loop
+                        cursor++;
+                        
+                        Node nd1, nd2;
+                        if (c <= (g->n)){
+                            if ((i = contains(n1, g->nodes, c)) == -1){
+                                nd1 = create_node(n1);
+                                g->nodes[c] = nd1;
+                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct node *)); // fixed: g->nodes[i] was accessing -1 element and causing segm fault
+                                if (!g->nodes[i]) {
+                                    free_graph(g);
+                                return NULL;
+                                }
+                            }else{ 
+                                nd1 = g->nodes[i];
+                            }
+                            if (c <= (g->n) && (i = contains(n2, g->nodes, c)) == -1){
+                                nd2 = create_node(n2);
+                                g->nodes[c]  = nd2;
+                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct node *));
+                                if (!g->nodes[i]) {
+                                    free_graph(g);
+                                return NULL;
+                                }
+                            }else{
+                                nd2 = g->nodes[i];
+                            }
+                            if (nd1 && nd2){
+                                link_nodes(nd1, nd2);
+                                if (g->type == UNDIRECTED){
+                                    link_nodes(nd2, nd1);
+                                }
+                            }
+                        }
+                    }
+                    g->n = c; // actual number of nodes
+                }
+            
+                else if (gcreation == 'r'){
+
+                    g = generate_rgraph(g);
+                    if (g == NULL){
+                        perror("Graph generation failed");
+                        return NULL;
+                    }
+                    
+                }
+                printf("Here is your graph based on the description you provided.\n\n");
+                return g;
             }
-            g->n = c; // actual number of nodes
             
         }
-        else if (gtype == 'r'){
-            fill_nodes_0_to_1(g);
-            g = generate_rgraph(g);
-            if (g == NULL){
-                perror("Graph generation failed");
-                return NULL;
-            }
-            
+        else if (reply_type == 'u'){
+            printf("%s", rep);
+            return NULL;
         }
-        printf("Here is your graph based on the description you provided.\n");
-        return g;
     }
-    else if (reply_type == 'u'){
-        printf("%s", rep);
-      
-    }
+    printf("Something went wrong. Try again.");
+
     return NULL;
 }
 
@@ -92,22 +114,29 @@ char *ask_llm(char * user_prompt, char *history){
     char payload[100000]; 
     
     char * system_prompt =  "Your purpose is to derive graph information from the talk with the user. Dismiss unrelated questions."  
-                            "You need to establish the number of nodes, whether the graph should be random or manually defined."
+                            "You need to establish the number of nodes, whether the graph should be random"
                             "Ensure the number of nodes is more than zero."
-                            "If user specifies connections between nodes it's a manual graph."
-                            "If you are missing one of the informations, you have to alert the user."
-                            "You must spot errors, mismatches and alert the user if the number of nodes specified doesn’t match the unique nodes in the connections."
+                            "If user specifies connections between nodes it's not a random graph."
                             "You have two streams: 'u' for user replies (to clarify info or report errors),"
                             "and 'd' for extracted data, the final result, that should never be included in 'u' responses."
                             "Each response starts with 'u' or 'd', you must include them (e.g., 'uPlease specify the type of graph')."
                             "When there is no errors and you don't need to contact the user, make a 'd' response."
                             "You can make a 'd' response only when you have gathered all information"
-                            "For 'd' responses: you put number of nodes, next you put letter 'r' for random graphs or 'm' for manual graphs, separating each parameter with a space."
-                            "If it's a manual graph, place edges as a pair of numbers (e.g., '0 1 2 3' meaning 0 connected to 1, 2 to 3). No extra text is allowed."
-                            "Example of a correct 'd' response - 'd5 m 1 2 3 2 4 1 4 5; or 'd100 r'"
-                            "The 'u' response should be regular casual text message to the user."
-                            "Manual graph REQUIRES specifying connections between nodes. You cant proceed without gathering data about connections unless it's a random graph."
-                            "Ask the user for information he didn't provide before proceeding";
+                            "The 'd' response format looks like this: (<> represent placeholder and slash means either one if the letters)'<d//u><int> <m//r> <d//u> <n1> <n2> ...' "
+                            ": first you put letter 'u' or 'd', without a space you must put number of nodes, "
+                            "Example of a correct 'd' response - 'd5 m u 1 2 3 2 4 1 4 5; or 'd100 r d'"
+                            "You can't mix responses 'u' and 'd' together - one is for data other is meant for the user."
+                            "next you separate each parameter with spaces:  put letter 'r' for random graphs or 'm' for manual graphs and after that "
+                            "you must put the letter 'd' for directed graph or 'u' for undirected"
+                            "If it's not a random graph, place edges as a pair of numbers (e.g., '0 1 2 3' meaning 0 connected to 1, 2 to 3). No extra text is allowed."
+                            "Always set graph to be undirected, unless user mentions he wants a directed graph"
+                            "The  response starting with 'u' should be regular casual text message to the user."
+                            "You cant proceed without gathering data about connections unless it's a random graph."
+                            "Ask the user for information he didn't provide before proceeding"
+                            "Anticipate that user might express connections using arrow symbol, dashes (e.g., '1->2' or '1-2') or detailed verbal descriptions (e.g. 'node 1 connects to node 2')."
+                            "Avoid duplicates. (e.g. '1->2 2<-1 1->2' should result in only one '1 2' )"
+                            "If there is a direction, first node in an edge have be to the node that points to the other node (e.g. '1->2' and '2<-1' should result both in '1 2')";
+                            
     char user_prompt_obj[2048];
     
     if (curl){

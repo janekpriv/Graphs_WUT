@@ -59,7 +59,7 @@ void link_nodes(Node node1, Node node2) {
 Graph *generate_rgraph(Graph *g){ 
     int i, j;
     int v = g->n;
-
+    fill_nodes_0_to_1(g);
     int rne; // random number of links
     int re;  // random edge
     
@@ -112,6 +112,8 @@ void print_list_repr(Graph *g){
         
         for (int j = 0; j < g->nodes[i]->ne; j++) {
             printf("%d ", g->nodes[i]->links[j]->id);
+            //printf("g->nodes[%d]->ne = %d\n", i, g->nodes[i]->ne);
+            //printf("g->nodes[%d]->links[%d] = %d \n", i, j, g->nodes[i]->links[j]->id);
         }
         printf("\n");
     }

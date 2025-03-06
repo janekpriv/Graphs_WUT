@@ -1,7 +1,5 @@
-
 #ifndef __LLM_H__
 #define __LLM_H__
-
 
 #include <stdlib.h>
 #include <curl/curl.h>
