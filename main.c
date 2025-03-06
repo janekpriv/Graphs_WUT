@@ -1,10 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "graph.h"
+//#include "graph.h"
 #include <time.h>
-
+#include "llm.h"
+#include <string.h>
 int main() {
     srand(time(NULL));
+    /*
     Graph *g = graph_init(10, UNDIRECTED);
     if (g == NULL){
         perror("Graph initalization failed");
@@ -18,21 +20,36 @@ int main() {
     printf("Undirected Graph\n");
     print_list_repr(g);
     free_graph(g);
+    */
+   char * choice[8];  int tmp;
 
-    Graph *g2 = graph_init(10, DIRECTED);
-    if (g == NULL){
-        perror("Graph initalization failed");
-        return 1;
+    printf("How would you like to enter graph properties\n"
+           "0 - plain text (llm will analyze your input)\n"
+           "1 - you will be asked about every property\n"
+           "Choice: ");
+           
+    fgets(choice, sizeof(choice), stdin);
+    if (sscanf(choice, " %d",&tmp) == 1){
+        char user_prompt[512] = "";
+    
+        char history[100000] = "";
+
+        while (1) {
+            printf("\n>>> ");
+            if (fgets(user_prompt, sizeof(user_prompt), stdin) == NULL) {
+                printf("Error reading input. Exiting...\n");
+                break;
+            }
+            printf("AI: ");
+            user_prompt[strcspn(user_prompt, "\n")] = '\0';  // Remove newline (ruins json)
+
+            
+            ask_llm(user_prompt, history);
+            
+        
+        }
+        
     }
-
-    g2 = generate_rgraph(g2);
-    if (g == NULL){
-        perror("Graph generation failed");
-        return 1;
-    }
-    printf("\nDirected Graph\n");
-    print_list_repr(g2);
-    free_graph(g2);
-
+    
     return 0;
 }

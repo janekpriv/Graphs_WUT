@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "graph.h"
-#define DEBUG
+#undef DEBUG
 int contains(int id, Node *list, int size) {
     for (int i = 0; i < size; i++) {
         if (list[i]->id == id) {
-            return 1;
+            return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 Node create_node(int id){
@@ -19,6 +19,8 @@ Node create_node(int id){
     v->links = NULL;
     return v;
 }
+
+
 
 Graph * graph_init(int n, GraphType type) {
     Graph *g = malloc(sizeof(Graph));
@@ -32,15 +34,19 @@ Graph * graph_init(int n, GraphType type) {
         free(g);
         return NULL;
     }
-    for (int i = 0; i < n; i++) {
+    
+    return g;
+}
+
+void fill_nodes_0_to_1(Graph *g){
+    for (int i = 0; i < g->n; i++) {
         g->nodes[i] = create_node(i);
-        g->nodes[i]->links = malloc((n-1) * sizeof(struct node *));
+        g->nodes[i]->links = malloc(((g->n)-1) * sizeof(struct node *));
         if (!g->nodes[i]) {
             free_graph(g);
             return NULL;
         }
     }
-    return g;
 }
 
 void link_nodes(Node node1, Node node2) {
@@ -72,7 +78,7 @@ Graph *generate_rgraph(Graph *g){
         while(*ne < rne && *ne < v){
             re = i;
             int attempts = 0;
-            while(re == i || contains(re, g->nodes[i]->links, g->nodes[i]->ne)){
+            while(re == i || contains(re, g->nodes[i]->links, g->nodes[i]->ne) != -1 ){
                 re = rand() % v;
             
                 if (attempts++ >= v) break;
@@ -83,7 +89,7 @@ Graph *generate_rgraph(Graph *g){
             }
             link_nodes(g->nodes[i], g->nodes[re]);
             
-            if (g->type == UNDIRECTED && !contains(i, g->nodes[re]->links, g->nodes[re]->ne)){ 
+            if (g->type == UNDIRECTED && contains(i, g->nodes[re]->links, g->nodes[re]->ne) == -1 ){ 
                 link_nodes(g->nodes[re], g->nodes[i]);
             }
             #ifdef DEBUG
