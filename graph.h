@@ -6,20 +6,20 @@ typedef enum {
     DIRECTED
 } GraphType;
 
-typedef struct node {
+typedef struct Node {
     int id;
     int ne;
-    struct node **links;
+    struct Node **links;
 } *Node;
 
-typedef struct graph {
+typedef struct Graph {
     GraphType type;
     int n;  
     Node *nodes;
 } Graph;
 
 int contains(int, Node*, int);
-Node create_node(int);
+Node create_Node(int);
 Graph *generate_rgraph(Graph*);
 void print_list_repr(Graph*);
 void free_graph(Graph*);

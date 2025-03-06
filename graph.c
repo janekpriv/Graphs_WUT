@@ -11,8 +11,8 @@ int contains(int id, Node *list, int size) {
     return -1;
 }
 
-Node create_node(int id){
-    Node v = malloc(sizeof(struct node));
+Node create_Node(int id){
+    Node v = malloc(sizeof(struct Node));
     if (!v) return NULL;
     v->id = id;
     v->ne = 0;
@@ -40,8 +40,8 @@ Graph * graph_init(int n, GraphType type) {
 
 void fill_nodes_0_to_1(Graph *g){
     for (int i = 0; i < g->n; i++) {
-        g->nodes[i] = create_node(i);
-        g->nodes[i]->links = malloc(((g->n)-1) * sizeof(struct node *));
+        g->nodes[i] = create_Node(i);
+        g->nodes[i]->links = malloc(((g->n)-1) * sizeof(struct Node *));
         if (!g->nodes[i]) {
             free_graph(g);
             return NULL;
@@ -112,8 +112,7 @@ void print_list_repr(Graph *g){
         
         for (int j = 0; j < g->nodes[i]->ne; j++) {
             printf("%d ", g->nodes[i]->links[j]->id);
-            //printf("g->nodes[%d]->ne = %d\n", i, g->nodes[i]->ne);
-            //printf("g->nodes[%d]->links[%d] = %d \n", i, j, g->nodes[i]->links[j]->id);
+    
         }
         printf("\n");
     }

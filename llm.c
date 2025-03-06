@@ -49,9 +49,9 @@ Graph *parse_chat_reply(char rep[]){
                         Node nd1, nd2;
                         if (c <= (g->n)){
                             if ((i = contains(n1, g->nodes, c)) == -1){
-                                nd1 = create_node(n1);
+                                nd1 = create_Node(n1);
                                 g->nodes[c] = nd1;
-                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct node *)); // fixed: g->nodes[i] was accessing -1 element and causing segm fault
+                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct Node *)); // fixed: g->nodes[i] was accessing -1 element and causing segm fault
                                 if (!g->nodes[i]) {
                                     free_graph(g);
                                 return NULL;
@@ -60,9 +60,9 @@ Graph *parse_chat_reply(char rep[]){
                                 nd1 = g->nodes[i];
                             }
                             if (c <= (g->n) && (i = contains(n2, g->nodes, c)) == -1){
-                                nd2 = create_node(n2);
+                                nd2 = create_Node(n2);
                                 g->nodes[c]  = nd2;
-                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct node *));
+                                g->nodes[c++]->links = malloc(((g->n)-1) * sizeof(struct Node *));
                                 if (!g->nodes[i]) {
                                     free_graph(g);
                                 return NULL;
