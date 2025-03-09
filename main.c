@@ -69,11 +69,19 @@ int main() {
                 free_graph(g);
             }
             else if (mode == 2){
-            
-                graph *g  = create_graph(nodes_count);
-                get_input(g, nodes_count);
+                int type;
+                printf("\nShould the graph be directed or undirected?\n\n1. directed\n2.undirected\n\nChoice [1-2]: ");            
+                scanf("%d", &type);
+                if (type == 1){
+                    g = graph_init(nodes_count, DIRECTED);
+                    get_input(g, nodes_count);
+                }
+                else if (type == 2){
+                    g = graph_init(nodes_count, UNDIRECTED);
+                    get_input(g, nodes_count);
+                }
     
-            print_graph(g);
+                print_list_repr(g);
             }
         }
     }
