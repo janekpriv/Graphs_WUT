@@ -35,7 +35,9 @@ int main() {
                 user_prompt[strcspn(user_prompt, "\n")] = '\0';  // Remove newline (ruins json)
 
                 
-                ask_llm(user_prompt, history);
+                char * res = ask_llm(user_prompt, history);
+                if (res == NULL)
+                    break;
             }
         }
         else if (choice == 2){

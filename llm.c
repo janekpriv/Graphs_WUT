@@ -153,6 +153,8 @@ char *ask_llm(char * user_prompt, char *history){
                 "{ \"messages\": [{\"role\": \"system\", \"content\": \"%s\"}, %s %s]}",system_prompt, history, user_prompt_obj);
     
     char * chat_reply = send_query(payload, curl);
+    if (chat_reply == NULL)
+        return NULL;
 
     // add to history
     strcat(history, user_prompt_obj); // add latest prompt object to history
@@ -182,8 +184,10 @@ char * send_query(char * payload, CURL *curl){
     curl_easy_setopt(curl, CURLOPT_COPYPOSTFIELDS, payload);
 
     response = curl_easy_perform(curl);
-    if(response != CURLE_OK)
+    if(response != CURLE_OK){
         fprintf(stderr, "Request failed: %s\n", curl_easy_strerror(response));
+        return NULL;
+    }
 
     // parse the JSON data 
     cJSON *json = cJSON_Parse(chunk.response); 
