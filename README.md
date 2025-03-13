@@ -108,6 +108,24 @@ jeśli użytkownik chce zakończyć dodawanie krawędzi należy wpisać:
 ```
 -1 -1 
 ```
+## Reprezentacja grafu
+Graf reprezentowany jest poprzez listę sąsiedztwa.
+
+dla grafu skierowanego o 3 wierzchołkach utworzonego za pomocą następujących komend:
+
+```
+0 1
+1 2
+0 2
+```
+
+Wynik będzie następujący:
+
+```
+0: 1 2
+1: 2
+2 :
+```
 
 
 ---
