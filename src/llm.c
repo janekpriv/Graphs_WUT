@@ -3,8 +3,8 @@
 #include <cjson/cJSON.h> 
 #include <stdlib.h>
 #include <string.h>
-#include "llm.h"
-#include "graph.h"
+#include "../lib/llm.h"
+#include "../lib/graph.h"
 
 Graph *parse_chat_reply(char rep[]){
     char reply_type;

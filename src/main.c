@@ -2,7 +2,7 @@
 #include <stdio.h>
 //#include "graph.h"
 #include <time.h>
-#include "llm.h"
+#include "../lib/llm.h"
 #include <string.h>
 
 #include "../lib/user_input.h"
