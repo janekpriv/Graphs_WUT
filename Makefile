@@ -1,6 +1,6 @@
 CC = gcc
 //CFLAGS = -Wall -Wextra -pedantic -g
-OBJ = graph.o llm.o graph_generator.o user_input.o main.o
+OBJ = graph.o llm.o user_input.o main.o
 TARGET = graph
 LIBS = -lcurl -lcjson
 all: $(TARGET)

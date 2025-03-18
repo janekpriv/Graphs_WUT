@@ -83,6 +83,8 @@ Po uruchomieniu programu, użytkownik zostanie zapytany o preferowany sposób ge
 - `2` generowanie podając dokładne właściwości.
 
 ### Generowanie grafów promptem
+użyty model: `qwen2.5-7b-instruct-1m`
+
 program wyświetli '>>>' i będzie oczekiwał inputu użytkownika, pisząc można specyfikować wszystkie specyfikacje grafu. Historia konwersacji jest zapisywana(ale tylko podczas gdy program jest uruchomiony), więc utworzone grafy można modyfikować.
 
 ### Generowanie grafów manualnie
